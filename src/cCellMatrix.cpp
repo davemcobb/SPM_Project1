@@ -10,10 +10,10 @@
 //  initialize the 2d array of cells; this actually means an array of arrays of (width) cells
 //  initialise the Query object the life classes can use to find out about life around themselves
 cCellMatrix::cCellMatrix(int cellSize, int width, int height)
-    : iCellQuery{}, m_cellSize{ cellSize }, m_lifeWidth{ width / cellSize }, m_lifeHeight{ height / cellSize },
+    : iQuery{}, m_cellSize{ cellSize }, m_lifeWidth{ width / cellSize }, m_lifeHeight{ height / cellSize },
     m_life { m_lifeHeight, std::vector<cLife*>{ (const unsigned int) m_lifeWidth, nullptr} }
 {
-    cLife::setupQuery(*this);
+    cLife::setupInterfaces(this, this);
 }
 
 //--------------------------------------------------------------
@@ -138,6 +138,18 @@ void    cCellMatrix::update()
 }
 
 //--------------------------------------------------------------
+cLife* cCellMatrix::getLifeAtPos(int row, int col) const
+{
+    // if the query tries to look outside the valid range, return nullptr
+    if ((row >= 0) || (row < m_lifeHeight)
+        || (col >= 0) || (col < m_lifeWidth))
+    {
+        return (m_life[row][col]);
+    }
+    return nullptr;
+}
+
+//--------------------------------------------------------------
 // assign a new life to a location in the matrix
 // previous life is deleted immediately
 void cCellMatrix::setLifeAtPos(cLife* pLife, int row, int col)
@@ -164,73 +176,166 @@ int     cCellMatrix::getLivingCellCount(void) const
 }
 
 //--------------------------------------------------------------
+// returns a vector of all the registered types
+std::vector<std::string> cCellMatrix::queryLifeTypes()
+{
+    return mp_factory->getRegisteredTypes();
+}
+
+//--------------------------------------------------------------
+// returns a vector of nearby life objects, live or dead, of any type
+// this check the "square" of cells at the specified distance.
 std::vector<cLife*> cCellMatrix::queryNeighboursWithinDistance(cLife* pLife, int distance)
 {
     int xPos, yPos;
     pLife->getPosition(xPos, yPos);
 
     // clamp the search range to with the cell bounds: 0 to cellWidth or cellHeight
-    xPos = (xPos - distance < 0) ? 0 : xPos - distance;
-    yPos = (yPos - distance < 0) ? 0 : yPos - distance;
+    int firstRow = (yPos - distance < 0) ? 0 : yPos - distance;
+    int lastRow = (yPos + distance >= m_lifeHeight) ? yPos + distance : m_lifeHeight-1;
+    int firstCol = (xPos - distance < 0) ? 0 : xPos - distance;
+    int lastCol = (xPos + distance >= m_lifeWidth) ? xPos + distance : m_lifeWidth - 1;
 
     cLife* neighbour{ nullptr };
     m_neighbours.clear();
 
-#if 0
-    for (auto r = yPos, rowAbove = r - distance, rowBelow = r + distance; r < m_lifeHeight; r++, rowAbove++, rowBelow++)
+    // Put all of neighbouring life objects into an array.
+    // They are added from top row to bottom row, left to right
+    for (auto r = firstRow; r <= lastRow; r++)
     {
-        // calc indices for row above and below current row
-        for (auto c = xPos, colLeft = c - distance, colRight = c + distance; c < m_lifeWidth; c++, colLeft++, colRight++)
+        for (auto c = firstCol; c <= lastCol; c++)
         {
-            // set the neighbours array - rows above
-            neighbour = (rowAbove >= 0 && colLeft >= 0) ? (m_life[rowAbove][colLeft]) : nullptr;
-
-
-            m_neighbours[0] = (rowAbove >= 0 && colLeft >= 0) ? (m_life[rowAbove][colLeft]) : nullptr;
-            neighbours[1] = (rowAbove >= 0) ? (m_life[rowAbove][c]) : nullptr;
-            neighbours[2] = (rowAbove >= 0 && colRight < m_lifeWidth) ? (m_life[rowAbove][colRight]) : nullptr;
-
-            // set the neighbours array - this row
-            neighbours[3] = (colLeft >= 0) ? (m_life[r][colLeft]) : nullptr;
-            neighbours[4] = (colRight < m_lifeWidth) ? (m_life[r][colRight]) : nullptr;
-
-            // set the neighbours array - row below
-            neighbours[5] = (rowBelow < m_lifeHeight&& colLeft >= 0) ? (m_life[rowBelow][colLeft]) : nullptr;
-            neighbours[6] = (rowBelow < m_lifeHeight) ? (m_life[rowBelow][c]) : nullptr;
-            neighbours[7] = (rowBelow < m_lifeHeight&& colRight < m_lifeWidth) ? (m_life[rowBelow][colRight]) : nullptr;;
-#if 0   // debugging
-            if (mp_cells[r][c]->isAlive())
-            {
-                ofLog(OF_LOG_WARNING, "neighbours of r=%d,c=%d", r, c);
-                for (auto n : neighbourLife)
-                    ofLog(OF_LOG_WARNING, "  r=%d,c=%d", n->m_r, n->m_c);
-                ofLog(OF_LOG_WARNING, "end neighbours");
-
-            }
-#endif
-
-            m_neighbours.push_back(neighbour);
+            if (m_life[r][c] == pLife)
+                continue;
+            m_neighbours.push_back(m_life[r][c]);
         }
     }
-#endif
-
     return m_neighbours;
 }
 
 //--------------------------------------------------------------
+// check a specific cell location at relative to this life
 cLife* cCellMatrix::queryNeighbourAt(cLife* pLife, int xOffset, int yOffset)
 {
-    return nullptr;
+    int xPos, yPos;
+    pLife->getPosition(xPos, yPos);
+    return getLifeAtPos(yPos + yOffset, xPos + xOffset);
 }
 
 //--------------------------------------------------------------
-cLife* cCellMatrix::queryNearestSibling(cLife* pLife)
+// find the nearest life of the specified class. Note this is a simple test, 
+//  and will return the first found if more than one at the same distance.
+cLife* cCellMatrix::queryNearestOfType(cLife* pLife, std::string type)
 {
-    return nullptr;
+    cLife* pNearest { nullptr };
+    int distance { m_lifeWidth * m_lifeWidth };
+    int xPos, yPos;
+    pLife->getPosition(xPos, yPos);
+    for (auto row : m_life)
+    {
+        for (auto life : row)
+        {
+            if (life->getName() == pLife->getName())
+            {
+                int x, y;
+                life->getPosition(x, y);
+                int dist = sqrt((xPos - x) * (xPos - x) + (yPos - y) * (yPos - y));
+                if (dist < distance)
+                {
+                    distance = dist;
+                    pNearest = life;
+                }
+            }
+        }
+    }
+    return pNearest;
 }
 
 //--------------------------------------------------------------
+// returns the total number of cells of the same type
 int    cCellMatrix::querySiblingCount(cLife* pLife)
 {
-    return 0;
+    return queryTypeCount(pLife->getName());
+}
+
+//--------------------------------------------------------------
+// returns the total number of cells of the type specified
+int    cCellMatrix::queryTypeCount(std::string type)
+{
+    int count{ 0 };
+    for (auto row : m_life)
+    {
+        for (auto life : row)
+        {
+            if (life->getName() == type)
+                count++;
+        }
+    }
+    return count;
+}
+
+//--------------------------------------------------------------
+// returns the total number of living cells 
+int    cCellMatrix::queryLifeCount(std::string type)
+{
+    return getLivingCellCount();
+}
+
+//--------------------------------------------------------------
+// get the name of a specific life object
+std::string cCellMatrix::queryLifeType(cLife* pLife)
+{
+    if (nullptr == pLife)
+        return { "" };
+    return pLife->getName();
+}
+
+//--------------------------------------------------------------
+cLife* cCellMatrix::actionCreateType(std::string typeName, int x, int y, int health)
+{
+    mp_factory->spawn(typeName, x, y, health);
+    return nullptr;
+}
+
+//--------------------------------------------------------------
+cLife* cCellMatrix::actionMove(cLife* pLife, int xNew, int yNew, bool swap)
+{
+    // get the life at the new location
+    int rowNew = getYRow(yNew);
+    int colNew = getXCol(xNew);
+    cLife* pOld = m_life[rowNew][colNew];
+
+    int xOld, yOld;
+    pLife->getPosition(xOld, yOld);
+
+    // move the life to the new location
+    int rowOld = getYRow(yOld);
+    int colOld = getXCol(xOld);
+    m_life[rowNew][colNew] = pLife;
+    pLife->setPosition(xNew, yNew);
+    
+    // now, what to do a the old location? swap or reset
+    if (swap)
+    {
+        m_life[rowOld][colOld] = pOld;
+        pOld->setPosition(xOld, yOld);
+        return pOld;
+    } 
+    // otherwise delete life at destination and create a new life in the old location
+    delete pOld;
+    m_life[rowOld][colOld] = mp_factory->spawnDefault(xOld, yOld, 0);
+    m_life[rowOld][colOld]->setup();
+    return m_life[rowOld][colOld];
+}
+
+//--------------------------------------------------------------
+void  cCellMatrix::actionKill(cLife* pLife)
+{
+    pLife->reset();
+}
+
+//--------------------------------------------------------------
+void  cCellMatrix::actionKill(int x, int y)
+{
+    m_life[getYRow(y)][getXCol(x)]->reset();
 }

@@ -52,6 +52,9 @@
     <ClCompile Include="src\cFactory.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\cHungryBlob.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -120,6 +123,12 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\cFactory.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\iAction.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cHungryBlob.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

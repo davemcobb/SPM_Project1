@@ -187,6 +187,7 @@
     <ClCompile Include="src\cBlob.cpp" />
     <ClCompile Include="src\cCellMatrix.cpp" />
     <ClCompile Include="src\cFactory.cpp" />
+    <ClCompile Include="src\cHungryBlob.cpp" />
     <ClCompile Include="src\iCellQuery.cpp" />
     <ClCompile Include="src\cLife.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -206,6 +207,8 @@
     <ClInclude Include="src\cBlob.h" />
     <ClInclude Include="src\cCellMatrix.h" />
     <ClInclude Include="src\cFactory.h" />
+    <ClInclude Include="src\cHungryBlob.h" />
+    <ClInclude Include="src\iAction.h" />
     <ClInclude Include="src\iCellQuery.h" />
     <ClInclude Include="src\cLife.h" />
     <ClInclude Include="src\ofApp.h" />

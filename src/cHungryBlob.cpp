@@ -1,19 +1,19 @@
 #include "ofMain.h"
-#include "cBlob.h"
+#include "cHungryBlob.h"
 
-const std::string  cBlob::m_LifeName{ "blob" };
+const std::string  cHungryBlob::m_LifeName{ "HungryBlob" };
 
 //--------------------------------------------------------------
-cBlob::cBlob(int xpos, int ypos)
+cHungryBlob::cHungryBlob(int xpos, int ypos)
 	: cLife(xpos, ypos)
 {
-	m_color = ofColor::blueSteel;
+	m_color = ofColor::lightGoldenRodYellow;
 	m_drawSize += 3;
     m_name = m_LifeName;
 }
 
 //--------------------------------------------------------------
-void cBlob::draw()
+void cHungryBlob::draw()
 {
     if (m_health == 0)
         return;
@@ -23,7 +23,7 @@ void cBlob::draw()
 }
 
 //--------------------------------------------------------------
-NeighbourClassMap cBlob::countNeighbours(const std::vector<cLife*>& simNeighbours)
+NeighbourClassMap cHungryBlob::countNeighbours(const std::vector<cLife*>& simNeighbours)
 {
     // map of neighbor classes for each type, how many alive?
     NeighbourClassMap livingNeighbours;
@@ -40,7 +40,7 @@ NeighbourClassMap cBlob::countNeighbours(const std::vector<cLife*>& simNeighbour
 }
 
 //--------------------------------------------------------------
-int cBlob::interactWithNeighbours(const std::vector<cLife*>& simNeighbours, NeighbourClassMap& livingNeighbours)
+int cHungryBlob::interactWithNeighbours(const std::vector<cLife*>& simNeighbours, NeighbourClassMap& livingNeighbours)
 {
     // count the number of live neighbors this cell has; go through the map
     size_t livingNeighbourCount{ 0 };
@@ -94,7 +94,7 @@ int cBlob::interactWithNeighbours(const std::vector<cLife*>& simNeighbours, Neig
 }
 
 //--------------------------------------------------------------
-int  cBlob::updateHealthChange(int health)
+int  cHungryBlob::updateHealthChange(int health)
 {
     m_healthChange += health;
     if (m_healthChange > 0)
@@ -103,7 +103,7 @@ int  cBlob::updateHealthChange(int health)
 }
 
 //--------------------------------------------------------------
-void cBlob::applySimulationChanges()
+void cHungryBlob::applySimulationChanges()
 {
     m_health += m_healthChange;
 
@@ -114,9 +114,9 @@ void cBlob::applySimulationChanges()
 }
 
 //--------------------------------------------------------------
-cLife* cBlob::spawn(int x, int y, int health)
+cLife* cHungryBlob::spawn(int x, int y, int health)
 {
-	cBlob* pBlob = new cBlob(x, y);
+	cHungryBlob* pBlob = new cHungryBlob(x, y);
 	pBlob->setup();
 	pBlob->updateHealthChange(health);
 	return pBlob;

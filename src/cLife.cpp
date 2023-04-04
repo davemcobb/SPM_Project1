@@ -6,7 +6,8 @@
 
 
 const std::string   cLife::mk_LifeName{ "life" };
-iCellQuery*         cLife::msp_query{ nullptr };
+iQuery*             cLife::msp_query{ nullptr };
+iAction*            cLife::msp_action{ nullptr };
 
 //--------------------------------------------------------------
 cLife::cLife(int x, int y)
@@ -25,7 +26,6 @@ cLife::~cLife()
 cLife::cLife(const cLife& other)
     : cLife{other.m_xCentre, other.m_yCentre }
 {
-    m_health = 2;
 }
 
 //--------------------------------------------------------------
@@ -70,7 +70,7 @@ void cLife::simulate(const std::vector<cLife*>& simNeighbours)
     //  other types, this code must be changed, or the default life class must be changed
     //  to one that can check the surrounding life types
     int healthChange = interactWithNeighbours(simNeighbours, neighbourMap);
-    addPendingHealthChange(healthChange);
+    updateHealthChange(healthChange);
 }
 
 //--------------------------------------------------------------
@@ -145,7 +145,7 @@ int cLife::interactWithNeighbours(const std::vector<cLife*>& simNeighbours, Neig
 }
 
 //--------------------------------------------------------------
-int  cLife::addPendingHealthChange(int health)
+int  cLife::updateHealthChange(int health)
 { 
     m_healthChange += health;
     if (m_healthChange > 0)
@@ -160,7 +160,6 @@ void cLife::applySimulationChanges()
 
     // for base life, limit health to 0 or 1
     m_health = (m_health < 0) ? 0 : (m_health > MAX_LIFE) ? MAX_LIFE : m_health;
-
     m_healthChange = 0;
 }
 
@@ -180,16 +179,17 @@ void cLife::getPosition(int& x, int& y)
 }
 
 //--------------------------------------------------------------
-void  cLife::setupQuery(iCellQuery& query)
+void  cLife::setupInterfaces(iQuery* query, iAction* action)
 {
-    msp_query = &query;
+    msp_query = query;
+    msp_action = action;
 }
 
 //--------------------------------------------------------------
 cLife* cLife::spawn(int x, int y, int health)
 {
     cLife* pLife = new cLife(x, y);
-    pLife->addPendingHealthChange(health);
+    pLife->updateHealthChange(health);
     return pLife;
 }
 

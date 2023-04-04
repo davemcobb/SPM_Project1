@@ -1,17 +1,18 @@
 #pragma once
 #include "cLife.h"
 
-class cBlob :
+class cHungryBlob :
     public cLife
 {
 public:
-    cBlob(int xpos, int ypos);
-    virtual ~cBlob() = default;
+    cHungryBlob(int xpos, int ypos);
+    virtual ~cHungryBlob() = default;
     virtual void draw();   
     virtual void applySimulationChanges() override;
 
     static const std::string  m_LifeName;
-    static std::string getLifeName() { return { "blob" }; }
+    static std::string getLifeName() { return { m_LifeName }; }
+
     // note - each class that derives from cLife should have its own spawn()
     static cLife* spawn(int x, int y, int health); 
 

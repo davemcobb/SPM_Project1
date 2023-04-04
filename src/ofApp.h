@@ -32,7 +32,8 @@ public:
 
 private:
 	enum Patterns {
-		Blinker = 0,
+		Spot = 0,
+		Blinker,
 		Toad,
 		Beacon,
 		Glider,

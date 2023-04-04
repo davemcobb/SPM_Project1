@@ -12,7 +12,7 @@ cFactory::~cFactory()
 } 
 
 //--------------------------------------------------------------
-void    cFactory::registerClassSpawner(const std::string& name, LifeSpawnFunction spawnFunction)
+void    cFactory::registerTypeSpawner(const std::string& name, LifeSpawnFunction spawnFunction)
 {
     if (m_spawnerMap.count(name))
     {
@@ -20,6 +20,15 @@ void    cFactory::registerClassSpawner(const std::string& name, LifeSpawnFunctio
         return;
     }
     m_spawnerMap[name] = spawnFunction;
+}
+
+//--------------------------------------------------------------
+std::vector<std::string> cFactory::getRegisteredTypes()
+{
+    std::vector<string>  types;
+    for (auto itr : m_spawnerMap)
+        types.push_back(itr.first);
+    return types;
 }
 
 //--------------------------------------------------------------

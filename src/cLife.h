@@ -3,10 +3,11 @@
 #include <vector>
 #include <map>
 #include "ofMain.h"
-#include "iCellQuery.h"
 
 // forward declaration
 class cLife;
+class iQuery;
+class iAction;
 
 using NeighbourClassMap = std::map<std::string, size_t>;
 
@@ -33,15 +34,16 @@ public:   // accessible by any caller
     virtual void getPosition(int& x, int& y);
     
     // used only by the CellMatrix to register the Query interface
-    static void setupQuery(iCellQuery& query);
+    static void setupInterfaces(iQuery* query, iAction* action);
 
 protected:  // accessible by this class and derived classes
     virtual NeighbourClassMap countNeighbours(const std::vector<cLife*>& simNeighbours);
     virtual int interactWithNeighbours(const std::vector<cLife*>& simNeighbours, NeighbourClassMap& neighbourMap);
-    virtual int  addPendingHealthChange(int health);
+    virtual int  updateHealthChange(int health);
 
     static const std::string    mk_LifeName;
-    static iCellQuery*          msp_query;
+    static iQuery*  msp_query;
+    static iAction* msp_action;
     const int   MAX_LIFE{ 1 };
     int         m_health{ 0 };                  // health value. if <=0 it will die.
     int         m_healthChange{ 0 };            // add this amount to health at the end of the update

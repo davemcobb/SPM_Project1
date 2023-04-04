@@ -3,7 +3,9 @@
 #include "ofApp.h"
 #include "cLife.h"
 #include "cBlob.h"
-// #include any other life class headers here
+#include "cHungryBlob.h"
+
+// TODO:  #include any other life class headers here
 
 //--------------------------------------------------------------
 ofApp::ofApp()
@@ -18,8 +20,9 @@ void ofApp::setup() {
     ofSeedRandom();
     
     // TODO: register your class here to enable it to be spawned
-    m_factory.registerClassSpawner(cLife::getLifeName(), cLife::spawn);
-    m_factory.registerClassSpawner(cBlob::getLifeName(), cBlob::spawn);
+    m_factory.registerTypeSpawner(cLife::getLifeName(), cLife::spawn);
+    m_factory.registerTypeSpawner(cBlob::getLifeName(), cBlob::spawn);
+    m_factory.registerTypeSpawner(cHungryBlob::getLifeName(), cHungryBlob::spawn);
 
     // TODO: set the default Life type for all cells here
     m_factory.setDefaultLife(cBlob::getLifeName());
@@ -28,7 +31,6 @@ void ofApp::setup() {
     m_cellMatrix.setup(&m_factory);
 }
 
-
 //--------------------------------------------------------------
 void    ofApp::createNewGeneration()
 {
@@ -36,9 +38,13 @@ void    ofApp::createNewGeneration()
     int anchorRow = (int)ofRandom(m_cellMatrix.getHeight() * 0.1, m_cellMatrix.getHeight() * 0.8f);
     int anchorCol = (int)ofRandom(m_cellMatrix.getWidth() * 0.1, m_cellMatrix.getWidth() * 0.8f);
 
+    // make a list of cells as the template for the pattern to apply
     static std::vector<std::pair<int, int>> lifeCellsList;
+    // add an 'anchor' cell to the list
     lifeCellsList.push_back(std::make_pair(anchorRow, anchorCol));
-
+    // pick a random pattern
+    // NOTE: no error checking! current patterns will use only valid cells in the matrix.
+    //       be careful if adding new patterns or changing the range of the anchor cell.
     int pattern = ofRandom(Patterns::_First, Patterns::_Last);
 #ifdef _DEV_DEBUG
     // debug - force specific patterns
@@ -51,12 +57,15 @@ void    ofApp::createNewGeneration()
 
     switch (pattern)
     {
-    case Patterns::Blinker:
+    case Patterns::Spot:     // A single cell. No futher action is need
+        break;
+
+    case Patterns::Blinker: //  https://conwaylife.com/wiki/Blinker
         lifeCellsList.push_back(std::make_pair(anchorRow + 1, anchorCol));
         lifeCellsList.push_back(std::make_pair(anchorRow + 2, anchorCol));
         break;
 
-    case Patterns::Toad:
+    case Patterns::Toad:    // https://conwaylife.com/wiki/Toad
         lifeCellsList.push_back(std::make_pair(anchorRow + 1, anchorCol));
         lifeCellsList.push_back(std::make_pair(anchorRow + 2, anchorCol));
         lifeCellsList.push_back(std::make_pair(anchorRow + 1, anchorCol + 1));
@@ -64,7 +73,7 @@ void    ofApp::createNewGeneration()
         lifeCellsList.push_back(std::make_pair(anchorRow + 3, anchorCol + 1));
         break;
 
-    case Patterns::Beacon:
+    case Patterns::Beacon:  // https://conwaylife.com/wiki/Beacon
         lifeCellsList.push_back(std::make_pair(anchorRow, anchorCol + 1));
         lifeCellsList.push_back(std::make_pair(anchorRow + 1, anchorCol)); 
         lifeCellsList.push_back(std::make_pair(anchorRow + 1, anchorCol + 1));
@@ -75,7 +84,7 @@ void    ofApp::createNewGeneration()
 
         break;
 
-    case Patterns::Glider:
+    case Patterns::Glider:  // https://conwaylife.com/wiki/Glider
         lifeCellsList.push_back(std::make_pair(anchorRow + 1, anchorCol + 1));
         lifeCellsList.push_back(std::make_pair(anchorRow + 2, anchorCol - 1));
         lifeCellsList.push_back(std::make_pair(anchorRow + 2, anchorCol));
@@ -83,23 +92,21 @@ void    ofApp::createNewGeneration()
         break;
 
     default:
-    case Patterns::Peak:
+    case Patterns::Peak:    // inverted 'T' shape
         lifeCellsList.push_back(std::make_pair(anchorRow, anchorCol + 1));
         lifeCellsList.push_back(std::make_pair(anchorRow, anchorCol + 2));
         lifeCellsList.push_back(std::make_pair(anchorRow+1, anchorCol + 1));
         break;
     }
 
-    // TODO - choose the life type to spawn with a generation
+    // TODO - choose the life type to spawn with this pattern
     // select a randomly chosen life to spawn at the cells in the vector
     //std::string lifeName = m_factory.getRandomLife();
-    std::string lifeName = m_factory.getDefaultLifeName();
+    //  or use the default type 
+    //std::string lifeName = m_factory.getDefaultLifeName();
+    //  or override with a specific type 
+    std::string lifeName = cHungryBlob::getLifeName();
 
-#ifdef _DEV_DEBUG
-    // override the randomness and force the created life to be ...
-    // lifeName = cLife::getLifeName();
-    lifeName = cBlob::getLifeName();
-#endif
     for (auto& pair : lifeCellsList)
     {
         cLife * pLife = m_factory.spawn(lifeName, m_cellMatrix.getColX(pair.second), m_cellMatrix.getRowY(pair.first), 1);

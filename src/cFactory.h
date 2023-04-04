@@ -22,7 +22,8 @@ class cFactory
 public:
     cFactory();
     ~cFactory();
-    void    registerClassSpawner(const std::string& name, LifeSpawnFunction spawnFunction);
+    void    registerTypeSpawner(const std::string& name, LifeSpawnFunction spawnFunction);
+    std::vector<string>    getRegisteredTypes();
     void    setDefaultLife(const std::string& name);
     std::string  getDefaultLifeName() { return m_defaultName; }
     std::string  getRandomLifeName();
